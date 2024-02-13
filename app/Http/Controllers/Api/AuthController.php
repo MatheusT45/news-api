@@ -17,54 +17,62 @@ class AuthController extends Controller
 
     public function adminAdd(Request $request)
     {
-        #write your code for Add Admin here...
-		#model name = Users
-		#table name = users
-		#table fields = id,name,email,password,remember_token,created_at,updated_at
-		#all fields are required
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|unique:users',
+            'password' => 'required',
+        ], [
+            'required' => 'email or name or password missing'
+        ]);
 
-        $admin = new User($request->input());
+        if ($validator->fails()) {
+            return response()->json(['errMsg' => implode($validator->errors()->all())], 400);
+        }
 
+        $admin = new User([
+            'name' => $request->input()['name'],
+            'email' => $request->input()['email'],
+            'password' => Hash::make($request->input()['password'])
+        ]);
         $admin->save();
-        return response()->json($admin);
+
+        return response()->json($admin, 201);
     }
 
     public function login()
     {
-        #write your code for Admin login here...
-        #model name = Users
-        #table name = users
-        #table fields = id,name,email,password,remember_token,created_at,updated_at
-        #all fields are required
         $credentials = request(['email', 'password']);
-
-        if (! $token = auth()->attempt($credentials)) {
+        if (!$token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
-        ]);
+        return response()->json($token);
     }
 
     public function newsAdd(Request $request)
     {
-        #write your code for Admin add news here...
-        #model name = News,Users
-        #table name = news,user
-        #table fields = id,userid,publisher,description,title,clicks,trendRate
-        #all fields are required
-        $admin =  auth()->user();
+        $validator = Validator::make($request->all(), [
+            'publisher' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'clicks' => 'required',
+        ], [
+            'required' => 'MandatoryFieldsNotComplete'
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errMsg' => $validator->errors()->all()[0]], 400);
+        }
+
+        $admin = auth()->user();
         if(!$admin) {
-            return response()->json([], 400);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $news = new News($request->input());
+        $news->userid = $admin->id;
         $news->save();
 
-        return response()->json($news);
+        return response()->json($news, 201);
 	}
 }
