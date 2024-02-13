@@ -12,6 +12,18 @@ Inspired by the HackerRank challenge
 
 **Commands**
 
+- run database:
+
+```bash
+docker compose up -d
+```
+
+- run migrations:
+
+```bash
+php artisan migrate:fresh
+```
+
 - run:
 
 ```bash

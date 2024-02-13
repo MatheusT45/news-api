@@ -1,27 +1,29 @@
-version: '3'
-
-services:
-  sqlite-container:
-    image: alpine:latest
-    volumes:
-      - ./database:/data
-    command: sh -c "apk --no-cache add sqlite && cp /data/initial-db.sqlite /data/db.sqlite && sqlite3 /data/db.sqlite < /data/init.sql && tail -f /dev/null"
-    container_name: sqlite-container
-
-  sqlitebrowser:
-    image: linuxserver/sqlitebrowser
-    ports:
-      - '3000:3000'
-    depends_on:
-      - sqlite-container
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - ENABLE_UWSGI=true
-    volumes:
-      - sqlite_data:/data/db
-    container_name: sqlitebrowser
+version: '3.8'
 
 volumes:
-  sqlite_data:
+  mysql_local_data:
+  node_modules:
+  vendor:
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    container_name: db
+    hostname: db
+    environment:
+      MYSQL_DATABASE: news
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_local_data:/var/lib/mysql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    links:
+      - db
